@@ -16,6 +16,7 @@ interface Props {
 interface State {
   currentQuestionIndex: number | null;
   questions: Question[];
+  hasStarted: boolean;
   isLoading: boolean;
   isError: boolean;
 }
@@ -68,13 +69,10 @@ class App extends React.Component<Props, State> {
     this.state = {
       currentQuestionIndex: null,
       questions: [],
+      hasStarted: false,
       isLoading: true,
       isError: false
     };
-  }
-
-  componentDidMount(): void {
-      this.fetchQuestions(12, Category.Animals, Difficulty.Medium);
   }
 
 
@@ -105,14 +103,11 @@ class App extends React.Component<Props, State> {
   handleAnswerSelection(answer: string) {
     const { currentQuestionIndex, questions } = this.state;
      if (currentQuestionIndex !== null && answer === atob(questions[currentQuestionIndex].correct_answer)) {
-      console.log("in 2")
       if (currentQuestionIndex === questions.length - 1) { // last question
-        console.log("in 3")
         this.setState({
           currentQuestionIndex: null
         })
       } else {
-        console.log("in 4")
         this.setState({
           currentQuestionIndex: currentQuestionIndex + 1
         })
@@ -120,36 +115,55 @@ class App extends React.Component<Props, State> {
     }
   }
 
+  handleStartClick() {
+    this.setState({
+      hasStarted: true
+    })
+    this.fetchQuestions(12, Category.Animals, Difficulty.Medium);
+  }
+
   render() {
-    const { isLoading, isError, questions, currentQuestionIndex } = this.state;
+    const { isLoading, isError, questions, currentQuestionIndex, hasStarted } = this.state;
     return (
       <div className="App">
-        <header className="appHeader">
-          <p>
-            {isLoading ? (
-              <Vortex
-                visible={true}
-                height="80"
-                width="80"
-                ariaLabel="vortex-loading"
-                wrapperStyle={{}}
-                wrapperClass="vortex-wrapper"
-                colors={['red', 'green', 'blue', 'yellow', 'orange', 'purple']}
-              />
-            ) : isError || currentQuestionIndex === null ? (
-              <div>Error!</div>
-            ) : (
-              <div>
-                <div className="question">{atob(this.state.questions[currentQuestionIndex].question)}</div>
-                <AnswerBox
-                  options={this.combineAnswers(questions[currentQuestionIndex])}
-                  selected={(answer: string) => this.handleAnswerSelection(answer)}
-                  correct_answer={atob(questions[0].correct_answer)}
-                />
-              </div>
-            )}
-          </p>
+        <header>
+          { hasStarted && currentQuestionIndex !== null ? (
+            <div className="header">{atob(this.state.questions[currentQuestionIndex].question)}</div>
+          ) : (
+            <div className="header">
+              Trivia is Fun!
+            </div>
+          )
+          }
         </header>
+        {!hasStarted && (
+          <button type="submit" onClick={() => this.handleStartClick()}>
+            Start
+          </button>
+        )}
+        {hasStarted && <p>
+          {isLoading ? (
+            <Vortex
+              visible={true}
+              height="80"
+              width="80"
+              ariaLabel="vortex-loading"
+              wrapperStyle={{}}
+              wrapperClass="vortex-wrapper"
+              colors={['red', 'green', 'blue', 'yellow', 'orange', 'purple']}
+            />
+          ) : isError || currentQuestionIndex === null ? (
+            <div>Error!</div>
+          ) : (
+            <div>
+              <AnswerBox
+                options={this.combineAnswers(questions[currentQuestionIndex])}
+                selected={(answer: string) => this.handleAnswerSelection(answer)}
+                correct_answer={atob(questions[0].correct_answer)}
+              />
+            </div>
+          )}
+        </p>}
       </div>
     );
   }
