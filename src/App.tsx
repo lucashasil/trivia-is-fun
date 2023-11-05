@@ -19,6 +19,13 @@ interface State {
   hasStarted: boolean;
   isLoading: boolean;
   isError: boolean;
+  userSelection: UserSelection | null;
+}
+
+interface UserSelection {
+  numberOfQuestions: number;
+  questionDifficulty: string;
+  questionType: string;
 }
 
 interface Question {
@@ -71,7 +78,8 @@ class App extends React.Component<Props, State> {
       questions: [],
       hasStarted: false,
       isLoading: true,
-      isError: false
+      isError: false,
+      userSelection: null
     };
   }
 
@@ -122,6 +130,19 @@ class App extends React.Component<Props, State> {
     this.fetchQuestions(12, Category.Animals, Difficulty.Medium);
   }
 
+  handleSelectionSubmit(event: React.FormEvent<HTMLFormElement>) {
+    const numberOfQuestions = parseInt((event.currentTarget[0] as HTMLInputElement).value);
+    const questionDifficulty = (event.currentTarget[1] as HTMLInputElement).value;
+    const questionType = (event.currentTarget[2] as HTMLInputElement).value;
+    this.setState({
+      userSelection: {
+        numberOfQuestions,
+        questionDifficulty,
+        questionType
+      }
+    })
+  }
+
   render() {
     const { isLoading, isError, questions, currentQuestionIndex, hasStarted } = this.state;
     return (
@@ -137,9 +158,28 @@ class App extends React.Component<Props, State> {
           }
         </header>
         {!hasStarted && (
-          <button type="submit" onClick={() => this.handleStartClick()}>
-            Start
-          </button>
+          <div>
+            <form onSubmit={this.handleSelectionSubmit}>
+              <label>Number of Questions</label><br/>
+              <input type="number"/>
+              <label>Difficulty of Questions</label>
+              <div className="difficultyGroup">
+                <input type="radio" value="Easy" name="difficulty"/> Easy
+                <input type="radio" value="Medium" name="difficulty"/> Medium
+                <input type="radio" value="Hard" name="difficulty"/> Hard
+                <input type="radio" value="Any" name="difficulty"/> Any
+              </div>
+              <label>Type of Questions</label>
+              <div className="typeGroup">
+                <input type="radio" value="Multiple Choice" name="type"/> Multiple Choice
+                <input type="radio" value="True / False" name="type"/> True / False
+                <input type="radio" value="Either" name="type"/> Either
+              </div>
+              <button type="submit" id="questions" onClick={() => this.handleStartClick()}>
+                Start
+              </button>
+            </form>
+          </div>
         )}
         {hasStarted && <p>
           {isLoading ? (
