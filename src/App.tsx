@@ -19,13 +19,13 @@ interface State {
   hasStarted: boolean;
   isLoading: boolean;
   isError: boolean;
-  userSelection: UserSelection | null;
+  userSelection: UserSelection;
 }
 
 interface UserSelection {
   numberOfQuestions: number;
-  questionDifficulty: string;
-  questionType: string;
+  questionDifficulty?: string;
+  questionCategory?: number;
 }
 
 interface Question {
@@ -79,8 +79,16 @@ class App extends React.Component<Props, State> {
       hasStarted: false,
       isLoading: true,
       isError: false,
-      userSelection: null
+      userSelection: {
+        numberOfQuestions: 0,
+        questionDifficulty: undefined,
+        questionCategory: undefined
+      }
     };
+    this.handleStartClick = this.handleStartClick.bind(this);
+    this.handleNumberOfQuestionsChange = this.handleNumberOfQuestionsChange.bind(this);
+    this.handleQuestionCategoryChange = this.handleQuestionCategoryChange.bind(this);
+    this.handleQuestionDifficultyChange = this.handleQuestionDifficultyChange.bind(this);
   }
 
 
@@ -108,6 +116,11 @@ class App extends React.Component<Props, State> {
     return shuffleArray(incorrectAnswers.concat(correctAnswer)); // randomly sort answers using a Durstenfeld Shuffle
   }
 
+  humanCategoryNames() {
+    const categoryNames = Object.keys(Category).filter((key) => isNaN(Number(key)));
+    return categoryNames.map((name) => name.replace(/([A-Z])/g, ' $1').trim());
+  }
+
   handleAnswerSelection(answer: string) {
     const { currentQuestionIndex, questions } = this.state;
      if (currentQuestionIndex !== null && answer === atob(questions[currentQuestionIndex].correct_answer)) {
@@ -123,24 +136,65 @@ class App extends React.Component<Props, State> {
     }
   }
 
-  handleStartClick() {
-    this.setState({
-      hasStarted: true
-    })
-    this.fetchQuestions(12, Category.Animals, Difficulty.Medium);
+  convertQuestionDifficulty(difficulty: string) {
+    switch (difficulty) {
+      case 'Easy':
+        return Difficulty.Easy;
+      case 'Medium':
+        return Difficulty.Medium;
+      case 'Hard':
+        return Difficulty.Hard;
+      default:
+        return undefined;
+    }
   }
 
-  handleSelectionSubmit(event: React.FormEvent<HTMLFormElement>) {
-    const numberOfQuestions = parseInt((event.currentTarget[0] as HTMLInputElement).value);
-    const questionDifficulty = (event.currentTarget[1] as HTMLInputElement).value;
-    const questionType = (event.currentTarget[2] as HTMLInputElement).value;
-    this.setState({
-      userSelection: {
-        numberOfQuestions,
-        questionDifficulty,
-        questionType
+  handleStartClick() {
+    const { userSelection } = this.state;
+    if (userSelection) {
+      const { numberOfQuestions, questionDifficulty, questionCategory } = userSelection;
+      this.setState({
+        hasStarted: true
+      })
+      if (numberOfQuestions !== 0 && questionDifficulty !== undefined && questionCategory !== undefined) {
+        this.fetchQuestions(numberOfQuestions, questionCategory, this.convertQuestionDifficulty(questionDifficulty));
       }
-    })
+    }
+  }
+
+  handleNumberOfQuestionsChange(event: React.ChangeEvent<HTMLInputElement>)  {
+    const { userSelection } = this.state;
+    if (userSelection) {
+      this.setState({
+        userSelection: {
+          ...userSelection,
+          numberOfQuestions: parseInt(event.target.value)
+        }
+      })
+    }
+  }
+
+  handleQuestionCategoryChange(event: React.ChangeEvent<HTMLSelectElement>) {
+    const { userSelection } = this.state;
+    if (userSelection) {
+      this.setState({
+        userSelection: {
+          ...userSelection,
+          questionCategory: Object.keys(Category).indexOf(event.target.value)
+        }
+      })
+    }
+  }
+  handleQuestionDifficultyChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const { userSelection } = this.state;
+    if (userSelection) {
+      this.setState({
+        userSelection: {
+          ...userSelection,
+          questionDifficulty: event.target.value
+        }
+      })
+    }
   }
 
   render() {
@@ -159,26 +213,30 @@ class App extends React.Component<Props, State> {
         </header>
         {!hasStarted && (
           <div>
-            <form onSubmit={this.handleSelectionSubmit}>
-              <label>Number of Questions</label><br/>
-              <input type="number"/>
-              <label>Difficulty of Questions</label>
-              <div className="difficultyGroup">
-                <input type="radio" value="Easy" name="difficulty"/> Easy
-                <input type="radio" value="Medium" name="difficulty"/> Medium
-                <input type="radio" value="Hard" name="difficulty"/> Hard
-                <input type="radio" value="Any" name="difficulty"/> Any
-              </div>
-              <label>Type of Questions</label>
-              <div className="typeGroup">
-                <input type="radio" value="Multiple Choice" name="type"/> Multiple Choice
-                <input type="radio" value="True / False" name="type"/> True / False
-                <input type="radio" value="Either" name="type"/> Either
-              </div>
-              <button type="submit" id="questions" onClick={() => this.handleStartClick()}>
-                Start
-              </button>
-            </form>
+            <label>Number of Questions</label><br/>
+            <input type="number" onChange={this.handleNumberOfQuestionsChange}/>
+            <label>Difficulty of Questions</label>
+            <div className="difficultyGroup">
+            {['Easy', 'Medium', 'Hard', 'Any'].map((difficulty) => (
+              <label key={difficulty}>
+                <input
+                  type="radio"
+                  value={difficulty}
+                  name="difficulty"
+                  onChange={this.handleQuestionDifficultyChange}
+                />
+                {difficulty}
+              </label>
+            ))}
+            </div>
+            <select onChange={this.handleQuestionCategoryChange}>
+              {
+                this.humanCategoryNames().map((name) => <option value={name}>{name}</option>)
+              }
+            </select>
+            <button type="submit" id="questions" onClick={() => this.handleStartClick()}>
+              Start
+            </button>
           </div>
         )}
         {hasStarted && <p>
@@ -192,6 +250,8 @@ class App extends React.Component<Props, State> {
               wrapperClass="vortex-wrapper"
               colors={['red', 'green', 'blue', 'yellow', 'orange', 'purple']}
             />
+          ) : currentQuestionIndex === null ? (
+            <div>Game Over!</div>
           ) : isError || currentQuestionIndex === null ? (
             <div>Error!</div>
           ) : (
