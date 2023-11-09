@@ -212,10 +212,10 @@ class App extends React.Component<Props, State> {
           }
         </header>
         {!hasStarted && (
-          <div>
-            <label>Number of Questions</label><br/>
-            <input type="number" onChange={this.handleNumberOfQuestionsChange}/>
-            <label>Difficulty of Questions</label>
+          <div className="userSelection">
+            <label className="inputLabel">How many questions would you like? (Please enter a number between 0 and 99)</label><br/>
+            <input className="inputField" min="1" max="99" type="number" onChange={this.handleNumberOfQuestionsChange}/>
+            <label className="inputLabel">What should the difficulty of the questions be?</label>
             <div className="difficultyGroup">
             {['Easy', 'Medium', 'Hard', 'Any'].map((difficulty) => (
               <label key={difficulty}>
@@ -229,7 +229,8 @@ class App extends React.Component<Props, State> {
               </label>
             ))}
             </div>
-            <select onChange={this.handleQuestionCategoryChange}>
+            <label className="inputLabel">Please select a question category</label>
+            <select className="selectField" onChange={this.handleQuestionCategoryChange}>
               {
                 this.humanCategoryNames().map((name) => <option value={name}>{name}</option>)
               }
@@ -239,8 +240,8 @@ class App extends React.Component<Props, State> {
             </button>
           </div>
         )}
-        {hasStarted && <p>
-          {isLoading ? (
+        {hasStarted &&
+          (isLoading ? (
             <Vortex
               visible={true}
               height="80"
@@ -255,15 +256,15 @@ class App extends React.Component<Props, State> {
           ) : isError || currentQuestionIndex === null ? (
             <div>Error!</div>
           ) : (
-            <div>
+            <div className="answerBox">
               <AnswerBox
                 options={this.combineAnswers(questions[currentQuestionIndex])}
                 selected={(answer: string) => this.handleAnswerSelection(answer)}
                 correct_answer={atob(questions[0].correct_answer)}
               />
             </div>
-          )}
-        </p>}
+          )
+        )}
       </div>
     );
   }

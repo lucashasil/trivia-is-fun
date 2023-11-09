@@ -1,15 +1,53 @@
 .App {
   display: flex;
+  flex-direction: column;
   justify-content: center;
+  align-items: center;
 
   > header > .header {
-    width: 90%;
-    height: 90%;
     color: #fff;
     font-size: 32px; /* Adjust the font size as needed */
     font-family: 'Lato', sans-serif;
-    margin-bottom: 30px;
+    margin-bottom: 14px;
     user-select: none;
     justify-content: center;
+  }
+
+  > .userSelection {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    > .inputLabel {
+      color: white;
+      font-size: 16px;
+      font-family: 'Lato', sans-serif;
+      margin-top: 10px;
+      display: block;
+    }
+
+    >.inputField {
+      width: 50%;
+      padding: 10px;
+      margin: 5px 0;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 16px;
+
+      &:invalid {
+        outline: 3px solid red;
+      }
+    }
+
+    > .difficultyGroup {
+      > label {
+        color: white;
+      }
+    }
+  }
+
+  > .answerBox {
+    width: 93%;
   }
 }
