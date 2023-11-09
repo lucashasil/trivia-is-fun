@@ -91,12 +91,33 @@ class App extends React.Component<Props, State> {
     this.handleQuestionDifficultyChange = this.handleQuestionDifficultyChange.bind(this);
   }
 
-
   async fetchQuestions(amount: number, category: Category | undefined, difficulty: string | undefined) {
+    const countUrl = `https://opentdb.com/api_count.php?${category ? `category=${category}` : ''}`
+    const res = await axios.get(countUrl);
+
+    // handle the case where the maximum number of available questions is less than
+    // the user's desired number of questions
+    let numQuestions;
+    if (difficulty) {
+      numQuestions = res.data.category_question_count[`total_${difficulty}_question_count`]
+    } else {
+      numQuestions = res.data.category_question_count[`total_question_count`]
+    }
+    // fetch the maximum number of questions available for the selected category and difficulty
+    if (numQuestions < amount) {
+      amount = numQuestions;
+    }
+
     const baseUrl = `https://opentdb.com/api.php?amount=${amount}${category ? `&category=${category}` : ''}${difficulty ? `&difficulty=${difficulty}` : ''}&encode=base64`
     try {
-      const res = await axios.get(baseUrl);
-      const questions: Question[] = res.data.results
+      const resFinal = await axios.get(baseUrl);
+      const questions: Question[] = resFinal.data.results
+      if (questions.length === 0) {
+        this.setState({
+          isError: true
+        })
+        return;
+      }
       this.setState({
         currentQuestionIndex: 0,
         questions: questions,
@@ -156,7 +177,7 @@ class App extends React.Component<Props, State> {
       this.setState({
         hasStarted: true
       })
-      this.fetchQuestions(numberOfQuestions, questionCategory, questionDifficulty);
+      this.fetchQuestions(numberOfQuestions, questionCategory, questionDifficulty?.toLowerCase());
     }
   }
 
@@ -211,9 +232,11 @@ class App extends React.Component<Props, State> {
         </header>
         {!hasStarted && (
           <div className="userSelection">
-            <label className="inputLabel">How many questions would you like? (Please enter a number between 0 and 99)
+            <label className="inputLabel">How many questions would you like? (Please enter a number between 1 and 50)
             <br/>
-            <input className="inputField" min="1" max="99" type="number" onChange={this.handleNumberOfQuestionsChange}/>
+            <input className="inputField" min="1" max="50" type="number" onChange={this.handleNumberOfQuestionsChange}/>
+            <br/>
+            (If your desired number of questions cannot be found, all available questions will be returned)
             </label>
             <label className="inputLabel">What should the difficulty of the questions be?
             <div className="difficultyGroup">
