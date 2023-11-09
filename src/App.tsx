@@ -92,7 +92,7 @@ class App extends React.Component<Props, State> {
   }
 
 
-  async fetchQuestions(amount: number, category: Category | undefined, difficulty: Difficulty | undefined) {
+  async fetchQuestions(amount: number, category: Category | undefined, difficulty: string | undefined) {
     const baseUrl = `https://opentdb.com/api.php?amount=${amount}${category ? `&category=${category}` : ''}${difficulty ? `&difficulty=${difficulty}` : ''}&encode=base64`
     try {
       const res = await axios.get(baseUrl);
@@ -156,9 +156,7 @@ class App extends React.Component<Props, State> {
       this.setState({
         hasStarted: true
       })
-      if (numberOfQuestions !== 0 && questionDifficulty !== undefined && questionCategory !== undefined) {
-        this.fetchQuestions(numberOfQuestions, questionCategory, this.convertQuestionDifficulty(questionDifficulty));
-      }
+      this.fetchQuestions(numberOfQuestions, questionCategory, questionDifficulty);
     }
   }
 
@@ -180,7 +178,7 @@ class App extends React.Component<Props, State> {
       this.setState({
         userSelection: {
           ...userSelection,
-          questionCategory: Object.keys(Category).indexOf(event.target.value)
+          questionCategory: Object.keys(Category).indexOf(event.target.value) - 15 // subtract 15 to set index correctly
         }
       })
     }
@@ -212,35 +210,51 @@ class App extends React.Component<Props, State> {
           }
         </header>
         {!hasStarted && (
-          <div>
-            <label>Number of Questions</label><br/>
-            <input type="number" onChange={this.handleNumberOfQuestionsChange}/>
-            <label>Difficulty of Questions</label>
+          <div className="userSelection">
+            <label className="inputLabel">How many questions would you like? (Please enter a number between 0 and 99)
+            <br/>
+            <input className="inputField" min="1" max="99" type="number" onChange={this.handleNumberOfQuestionsChange}/>
+            </label>
+            <label className="inputLabel">What should the difficulty of the questions be?
             <div className="difficultyGroup">
-            {['Easy', 'Medium', 'Hard', 'Any'].map((difficulty) => (
+            {['Easy', 'Medium', 'Hard'].map((difficulty) => (
               <label key={difficulty}>
                 <input
                   type="radio"
-                  value={difficulty}
+                  value={difficulty === "Any" ? undefined : difficulty}
                   name="difficulty"
                   onChange={this.handleQuestionDifficultyChange}
                 />
                 {difficulty}
               </label>
             ))}
-            </div>
-            <select onChange={this.handleQuestionCategoryChange}>
+              <input
+                  defaultChecked
+                  type="radio"
+                  value={undefined}
+                  name="difficulty"
+                  onChange={this.handleQuestionDifficultyChange}
+              />
+              Any
+            </div></label>
+            <label className="inputLabel">Please select a question category
+            <br/>
+            <select className="selectField" onChange={this.handleQuestionCategoryChange}>
               {
-                this.humanCategoryNames().map((name) => <option value={name}>{name}</option>)
+                [
+                  <option defaultChecked>Any</option>
+                ].concat(
+                this.humanCategoryNames().map((name) => <option value={name}>{name}</option>))
               }
             </select>
+            </label>
             <button type="submit" id="questions" onClick={() => this.handleStartClick()}>
               Start
             </button>
           </div>
         )}
-        {hasStarted && <p>
-          {isLoading ? (
+        {hasStarted &&
+          (isLoading ? (
             <Vortex
               visible={true}
               height="80"
@@ -255,15 +269,15 @@ class App extends React.Component<Props, State> {
           ) : isError || currentQuestionIndex === null ? (
             <div>Error!</div>
           ) : (
-            <div>
+            <div className="answerBox">
               <AnswerBox
                 options={this.combineAnswers(questions[currentQuestionIndex])}
                 selected={(answer: string) => this.handleAnswerSelection(answer)}
                 correct_answer={atob(questions[0].correct_answer)}
               />
             </div>
-          )}
-        </p>}
+          )
+        )}
       </div>
     );
   }

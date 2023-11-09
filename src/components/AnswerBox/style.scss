@@ -4,9 +4,12 @@
     padding: 16px;
     margin-bottom: 16px;
     height: 670px;
+    display: grid;
+    grid-template-columns:  1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 20px;
 
   > .answerBtn {
-    display: inline-block;
     padding: 10px 20px;
     border: none;
     border-radius: 4px;
