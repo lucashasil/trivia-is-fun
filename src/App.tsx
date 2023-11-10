@@ -19,8 +19,10 @@ interface State {
   currentQuestionIndex: number | null;
   questions: Question[];
   hasStarted: boolean;
+  incorrectSelected: string[];
   isLoading: boolean;
   isError: boolean;
+  shuffledAnswers: string[];
   userSelection: UserSelection;
 }
 
@@ -77,8 +79,10 @@ const initialState = {
   currentQuestionIndex: null,
   questions: [],
   hasStarted: false,
+  incorrectSelected: [],
   isLoading: true,
   isError: false,
+  shuffledAnswers: [],
   userSelection: {
     numberOfQuestions: 0,
     questionDifficulty: undefined,
@@ -128,7 +132,8 @@ class App extends React.Component<Props, State> {
       this.setState({
         currentQuestionIndex: 0,
         questions: questions,
-        isLoading: false
+        isLoading: false,
+        shuffledAnswers: this.combineAnswers(questions[0])
       })
     } catch (error) {
       console.error("caught error", error);
@@ -150,17 +155,22 @@ class App extends React.Component<Props, State> {
   }
 
   handleAnswerSelection(answer: string) {
-    const { currentQuestionIndex, questions } = this.state;
+    const { currentQuestionIndex, incorrectSelected, questions } = this.state;
      if (currentQuestionIndex !== null && answer === atob(questions[currentQuestionIndex].correct_answer)) {
       if (currentQuestionIndex === questions.length - 1) { // last question
         this.setState({
-          currentQuestionIndex: null
+          currentQuestionIndex: null,
         })
       } else {
         this.setState({
-          currentQuestionIndex: currentQuestionIndex + 1
+          currentQuestionIndex: currentQuestionIndex + 1,
+          shuffledAnswers: this.combineAnswers(questions[currentQuestionIndex+1])
         })
       }
+    } else {
+      this.setState({
+        incorrectSelected: incorrectSelected.concat(answer)
+      })
     }
   }
 
@@ -224,12 +234,12 @@ class App extends React.Component<Props, State> {
   }
 
   render() {
-    const { isLoading, isError, questions, currentQuestionIndex, hasStarted } = this.state;
+    const { isLoading, isError, questions, currentQuestionIndex, hasStarted, incorrectSelected, shuffledAnswers } = this.state;
     return (
       <div className="App">
         <header>
-          { hasStarted && isLoading ? (
-            <div>Loading...</div>
+          {hasStarted && isLoading ? (
+            <div className="header">Loading...</div>
           ) : hasStarted && currentQuestionIndex !== null ? (
             <div className="header">{atob(this.state.questions[currentQuestionIndex].question)}</div>
           ) : hasStarted && currentQuestionIndex === null && !isLoading ? (
@@ -314,9 +324,10 @@ class App extends React.Component<Props, State> {
           ) : (
             <div className="answerBox">
               <AnswerBox
-                options={this.combineAnswers(questions[currentQuestionIndex])}
+                options={shuffledAnswers}
                 selected={(answer: string) => this.handleAnswerSelection(answer)}
-                correct_answer={atob(questions[0].correct_answer)}
+                correctAnswer={atob(questions[0].correct_answer)}
+                incorrectSelected={incorrectSelected}
               />
             </div>
           )

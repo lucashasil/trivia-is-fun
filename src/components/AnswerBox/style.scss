@@ -22,5 +22,9 @@
     &:hover {
       background-color: #0056b3; /* Change this to the hover background color */
     }
+
+    &.incorrectSelected {
+      background: red;
+    }
   }
 }
