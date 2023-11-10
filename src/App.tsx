@@ -3,6 +3,8 @@ import axios from 'axios';
 
 import './App.scss'
 
+import cloneDeep from 'clone-deep';
+
 import { Vortex } from 'react-loader-spinner';
 
 import AnswerBox from './components/AnswerBox';
@@ -70,21 +72,24 @@ enum Difficulty {
   Hard = 'hard'
 }
 
+// store initial state for easy reset
+const initialState = {
+  currentQuestionIndex: null,
+  questions: [],
+  hasStarted: false,
+  isLoading: true,
+  isError: false,
+  userSelection: {
+    numberOfQuestions: 0,
+    questionDifficulty: undefined,
+    questionCategory: undefined
+  }
+}
+
 class App extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props)
-    this.state = {
-      currentQuestionIndex: null,
-      questions: [],
-      hasStarted: false,
-      isLoading: true,
-      isError: false,
-      userSelection: {
-        numberOfQuestions: 0,
-        questionDifficulty: undefined,
-        questionCategory: undefined
-      }
-    };
+    this.state = cloneDeep(initialState) // deep clone the initial state to avoid mutating it
     this.handleStartClick = this.handleStartClick.bind(this);
     this.handleNumberOfQuestionsChange = this.handleNumberOfQuestionsChange.bind(this);
     this.handleQuestionCategoryChange = this.handleQuestionCategoryChange.bind(this);
@@ -98,10 +103,12 @@ class App extends React.Component<Props, State> {
     // handle the case where the maximum number of available questions is less than
     // the user's desired number of questions
     let numQuestions;
-    if (difficulty) {
-      numQuestions = res.data.category_question_count[`total_${difficulty}_question_count`]
-    } else {
-      numQuestions = res.data.category_question_count[`total_question_count`]
+    if (category) {
+      if (difficulty) {
+        numQuestions = res.data.category_question_count[`total_${difficulty}_question_count`]
+      } else {
+        numQuestions = res.data.category_question_count[`total_question_count`]
+      }
     }
     // fetch the maximum number of questions available for the selected category and difficulty
     if (numQuestions < amount) {
@@ -199,7 +206,7 @@ class App extends React.Component<Props, State> {
       this.setState({
         userSelection: {
           ...userSelection,
-          questionCategory: Object.keys(Category).indexOf(event.target.value) - 15 // subtract 15 to set index correctly
+          questionCategory: Object.keys(Category).indexOf((event.target.value).replace(/\s/g, "")) - 15 // subtract 15 to set index correctly
         }
       })
     }
@@ -221,13 +228,19 @@ class App extends React.Component<Props, State> {
     return (
       <div className="App">
         <header>
-          { hasStarted && currentQuestionIndex !== null ? (
+          { hasStarted && isLoading ? (
+            <div>Loading...</div>
+          ) : hasStarted && currentQuestionIndex !== null ? (
             <div className="header">{atob(this.state.questions[currentQuestionIndex].question)}</div>
-          ) : (
+          ) : hasStarted && currentQuestionIndex === null && !isLoading ? (
+            <div className="header">
+              Game Over!
+            </div>
+            ) : (
             <div className="header">
               Trivia is Fun!
             </div>
-          )
+            )
           }
         </header>
         {!hasStarted && (
@@ -288,9 +301,16 @@ class App extends React.Component<Props, State> {
               colors={['red', 'green', 'blue', 'yellow', 'orange', 'purple']}
             />
           ) : currentQuestionIndex === null ? (
-            <div>Game Over!</div>
+            <button
+              className="restartButton"
+              onClick={() =>
+                this.setState(cloneDeep(initialState)) // reset to initial state
+              }
+            >
+            Try Again?
+            </button>
           ) : isError || currentQuestionIndex === null ? (
-            <div>Error!</div>
+            <div>Something went wrong!</div>
           ) : (
             <div className="answerBox">
               <AnswerBox
