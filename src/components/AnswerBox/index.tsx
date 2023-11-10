@@ -4,16 +4,18 @@ import './style.scss'
 type Props = {
   options: string[];
   selected: (answer: string) => void;
-  correct_answer: string;
+  correctAnswer: string;
+  incorrectSelected: string[];
 };
 
 class AnswerBox extends React.Component<Props> {
   render() {
-    const { options, selected } = this.props;
+    const { options, incorrectSelected, selected } = this.props;
+    console.log("incorrectselected = ", incorrectSelected)
     return (
       <div className="AnswerBox">
         {options.map((option, index) => (
-          <button key={index} className="answerBtn" onClick={() => selected(option)}>
+          <button key={index} className={`answerBtn ${incorrectSelected.includes(option) ? 'incorrectSelected' : ''}`} onClick={() => selected(option)}>
               {option}
           </button>
         ))}

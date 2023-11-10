@@ -3,6 +3,8 @@ import axios from 'axios';
 
 import './App.scss'
 
+import cloneDeep from 'clone-deep';
+
 import { Vortex } from 'react-loader-spinner';
 
 import AnswerBox from './components/AnswerBox';
@@ -17,8 +19,10 @@ interface State {
   currentQuestionIndex: number | null;
   questions: Question[];
   hasStarted: boolean;
+  incorrectSelected: string[];
   isLoading: boolean;
   isError: boolean;
+  shuffledAnswers: string[];
   userSelection: UserSelection;
 }
 
@@ -70,37 +74,66 @@ enum Difficulty {
   Hard = 'hard'
 }
 
+// store initial state for easy reset
+const initialState = {
+  currentQuestionIndex: null,
+  questions: [],
+  hasStarted: false,
+  incorrectSelected: [],
+  isLoading: true,
+  isError: false,
+  shuffledAnswers: [],
+  userSelection: {
+    numberOfQuestions: 0,
+    questionDifficulty: undefined,
+    questionCategory: undefined
+  }
+}
+
 class App extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props)
-    this.state = {
-      currentQuestionIndex: null,
-      questions: [],
-      hasStarted: false,
-      isLoading: true,
-      isError: false,
-      userSelection: {
-        numberOfQuestions: 0,
-        questionDifficulty: undefined,
-        questionCategory: undefined
-      }
-    };
+    this.state = cloneDeep(initialState) // deep clone the initial state to avoid mutating it
     this.handleStartClick = this.handleStartClick.bind(this);
     this.handleNumberOfQuestionsChange = this.handleNumberOfQuestionsChange.bind(this);
     this.handleQuestionCategoryChange = this.handleQuestionCategoryChange.bind(this);
     this.handleQuestionDifficultyChange = this.handleQuestionDifficultyChange.bind(this);
   }
 
-
   async fetchQuestions(amount: number, category: Category | undefined, difficulty: string | undefined) {
+    const countUrl = `https://opentdb.com/api_count.php?${category ? `category=${category}` : ''}`
+    const res = await axios.get(countUrl);
+
+    // handle the case where the maximum number of available questions is less than
+    // the user's desired number of questions
+    let numQuestions;
+    if (category) {
+      if (difficulty) {
+        numQuestions = res.data.category_question_count[`total_${difficulty}_question_count`]
+      } else {
+        numQuestions = res.data.category_question_count[`total_question_count`]
+      }
+    }
+    // fetch the maximum number of questions available for the selected category and difficulty
+    if (numQuestions < amount) {
+      amount = numQuestions;
+    }
+
     const baseUrl = `https://opentdb.com/api.php?amount=${amount}${category ? `&category=${category}` : ''}${difficulty ? `&difficulty=${difficulty}` : ''}&encode=base64`
     try {
-      const res = await axios.get(baseUrl);
-      const questions: Question[] = res.data.results
+      const resFinal = await axios.get(baseUrl);
+      const questions: Question[] = resFinal.data.results
+      if (questions.length === 0) {
+        this.setState({
+          isError: true
+        })
+        return;
+      }
       this.setState({
         currentQuestionIndex: 0,
         questions: questions,
-        isLoading: false
+        isLoading: false,
+        shuffledAnswers: this.combineAnswers(questions[0])
       })
     } catch (error) {
       console.error("caught error", error);
@@ -122,17 +155,22 @@ class App extends React.Component<Props, State> {
   }
 
   handleAnswerSelection(answer: string) {
-    const { currentQuestionIndex, questions } = this.state;
+    const { currentQuestionIndex, incorrectSelected, questions } = this.state;
      if (currentQuestionIndex !== null && answer === atob(questions[currentQuestionIndex].correct_answer)) {
       if (currentQuestionIndex === questions.length - 1) { // last question
         this.setState({
-          currentQuestionIndex: null
+          currentQuestionIndex: null,
         })
       } else {
         this.setState({
-          currentQuestionIndex: currentQuestionIndex + 1
+          currentQuestionIndex: currentQuestionIndex + 1,
+          shuffledAnswers: this.combineAnswers(questions[currentQuestionIndex+1])
         })
       }
+    } else {
+      this.setState({
+        incorrectSelected: incorrectSelected.concat(answer)
+      })
     }
   }
 
@@ -156,7 +194,7 @@ class App extends React.Component<Props, State> {
       this.setState({
         hasStarted: true
       })
-      this.fetchQuestions(numberOfQuestions, questionCategory, questionDifficulty);
+      this.fetchQuestions(numberOfQuestions, questionCategory, questionDifficulty?.toLowerCase());
     }
   }
 
@@ -178,7 +216,7 @@ class App extends React.Component<Props, State> {
       this.setState({
         userSelection: {
           ...userSelection,
-          questionCategory: Object.keys(Category).indexOf(event.target.value) - 15 // subtract 15 to set index correctly
+          questionCategory: Object.keys(Category).indexOf((event.target.value).replace(/\s/g, "")) - 15 // subtract 15 to set index correctly
         }
       })
     }
@@ -196,24 +234,32 @@ class App extends React.Component<Props, State> {
   }
 
   render() {
-    const { isLoading, isError, questions, currentQuestionIndex, hasStarted } = this.state;
+    const { isLoading, isError, questions, currentQuestionIndex, hasStarted, incorrectSelected, shuffledAnswers } = this.state;
     return (
       <div className="App">
         <header>
-          { hasStarted && currentQuestionIndex !== null ? (
+          {hasStarted && isLoading ? (
+            <div className="header">Loading...</div>
+          ) : hasStarted && currentQuestionIndex !== null ? (
             <div className="header">{atob(this.state.questions[currentQuestionIndex].question)}</div>
-          ) : (
+          ) : hasStarted && currentQuestionIndex === null && !isLoading ? (
+            <div className="header">
+              Game Over!
+            </div>
+            ) : (
             <div className="header">
               Trivia is Fun!
             </div>
-          )
+            )
           }
         </header>
         {!hasStarted && (
           <div className="userSelection">
-            <label className="inputLabel">How many questions would you like? (Please enter a number between 0 and 99)
+            <label className="inputLabel">How many questions would you like? (Please enter a number between 1 and 50)
             <br/>
-            <input className="inputField" min="1" max="99" type="number" onChange={this.handleNumberOfQuestionsChange}/>
+            <input className="inputField" min="1" max="50" type="number" onChange={this.handleNumberOfQuestionsChange}/>
+            <br/>
+            (If your desired number of questions cannot be found, all available questions will be returned)
             </label>
             <label className="inputLabel">What should the difficulty of the questions be?
             <div className="difficultyGroup">
@@ -265,15 +311,23 @@ class App extends React.Component<Props, State> {
               colors={['red', 'green', 'blue', 'yellow', 'orange', 'purple']}
             />
           ) : currentQuestionIndex === null ? (
-            <div>Game Over!</div>
+            <button
+              className="restartButton"
+              onClick={() =>
+                this.setState(cloneDeep(initialState)) // reset to initial state
+              }
+            >
+            Try Again?
+            </button>
           ) : isError || currentQuestionIndex === null ? (
-            <div>Error!</div>
+            <div>Something went wrong!</div>
           ) : (
             <div className="answerBox">
               <AnswerBox
-                options={this.combineAnswers(questions[currentQuestionIndex])}
+                options={shuffledAnswers}
                 selected={(answer: string) => this.handleAnswerSelection(answer)}
-                correct_answer={atob(questions[0].correct_answer)}
+                correctAnswer={atob(questions[0].correct_answer)}
+                incorrectSelected={incorrectSelected}
               />
             </div>
           )
