@@ -15,7 +15,7 @@ class AnswerBox extends React.Component<Props> {
     return (
       <div className="AnswerBox">
         {options.map((option, index) => (
-          <button key={index} className={`answerBtn ${incorrectSelected.includes(option) ? 'incorrectSelected' : ''}`} onClick={() => selected(option)}>
+          <button key={index} className={`answerBtn ${incorrectSelected.includes(option) ? 'incorrectSelected' : ''} ${options.length > 2 ? 'multiple' : ''}`} onClick={() => selected(option)}>
               {option}
           </button>
         ))}

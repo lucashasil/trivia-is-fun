@@ -322,13 +322,18 @@ class App extends React.Component<Props, State> {
           ) : isError || currentQuestionIndex === null ? (
             <div>Something went wrong!</div>
           ) : (
-            <div className="answerBox">
-              <AnswerBox
-                options={shuffledAnswers}
-                selected={(answer: string) => this.handleAnswerSelection(answer)}
-                correctAnswer={atob(questions[0].correct_answer)}
-                incorrectSelected={incorrectSelected}
-              />
+            <div>
+              <div>
+                <AnswerBox
+                  options={shuffledAnswers}
+                  selected={(answer: string) => this.handleAnswerSelection(answer)}
+                  correctAnswer={atob(questions[0].correct_answer)}
+                  incorrectSelected={incorrectSelected}
+                />
+              </div>
+              <div className="questionCount">
+                {currentQuestionIndex + 1}/{questions.length}
+              </div>
             </div>
           )
         )}

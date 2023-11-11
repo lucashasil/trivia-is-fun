@@ -6,8 +6,11 @@
     height: 670px;
     display: grid;
     grid-template-columns:  1fr 1fr;
-    grid-template-rows: 1fr 1fr;
     gap: 20px;
+
+    &.multiple {
+      grid-template-rows: 1fr 1fr;
+    }
 
   > .answerBtn {
     padding: 10px 20px;
