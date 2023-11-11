@@ -1,13 +1,16 @@
 .AnswerBox {
-    background-color: #343541;
-    border-radius: 6px;
-    padding: 16px;
-    margin-bottom: 16px;
-    height: 670px;
-    display: grid;
-    grid-template-columns:  1fr 1fr;
+  background-color: #343541;
+  border-radius: 6px;
+  padding: 16px;
+  margin-bottom: 16px;
+  height: 670px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+
+  &.multiple {
     grid-template-rows: 1fr 1fr;
-    gap: 20px;
+  }
 
   > .answerBtn {
     padding: 10px 20px;
@@ -17,7 +20,9 @@
     color: #ffffff; /* Change this to your desired text color */
     font-size: 38px;
     cursor: pointer;
-    transition: background-color 0.3s, color 0.3s;
+    transition:
+      background-color 0.3s,
+      color 0.3s;
 
     &:hover {
       background-color: #0056b3; /* Change this to the hover background color */

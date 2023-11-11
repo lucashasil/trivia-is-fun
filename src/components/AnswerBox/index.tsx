@@ -1,5 +1,5 @@
-import React from 'react';
-import './style.scss'
+import React from "react";
+import "./style.scss";
 
 type Props = {
   options: string[];
@@ -11,12 +11,18 @@ type Props = {
 class AnswerBox extends React.Component<Props> {
   render() {
     const { options, incorrectSelected, selected } = this.props;
-    console.log("incorrectselected = ", incorrectSelected)
+    console.log("incorrectselected = ", incorrectSelected);
     return (
       <div className="AnswerBox">
         {options.map((option, index) => (
-          <button key={index} className={`answerBtn ${incorrectSelected.includes(option) ? 'incorrectSelected' : ''}`} onClick={() => selected(option)}>
-              {option}
+          <button
+            key={index}
+            className={`answerBtn ${
+              incorrectSelected.includes(option) ? "incorrectSelected" : ""
+            } ${options.length > 2 ? "multiple" : ""}`}
+            onClick={() => selected(option)}
+          >
+            {option}
           </button>
         ))}
       </div>
