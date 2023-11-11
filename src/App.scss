@@ -32,33 +32,32 @@
       color: #ffffff;
       background-color: #808080;
       transition: background-color 0.3s ease;
-    
-    /* Hover Effect */
-    &:hover {
-      background-color: #666666;    
+      width: 24%;
+      margin-bottom: 10px;;
+
+      &:hover {
+        background-color: #666666;
+      }
+
+      &:active {
+        background-color: #4d4d4d;
+      }
+
+      &:disabled {
+        cursor: not-allowed;
+        opacity: 0.5;
+      }
     }
-    
-    /* Active State */
-    &:active {
-      background-color: #4d4d4d;
-    }
-    
-    /* Disabled State */
-    &:disabled {
-      cursor: not-allowed;
-      opacity: 0.5;
-    }
-  }
 
     > .inputLabel {
       color: white;
-      font-size: 16px;
+      font-size: 18px;
       font-family: 'Lato', sans-serif;
       margin-top: 10px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      margin-bottom: 30px;
+      margin-bottom: 14px;
 
       >.inputField {
         width: 50%;
@@ -66,7 +65,7 @@
         margin: 5px 0;
         border: 1px solid #ccc;
         border-radius: 5px;
-        font-size: 16px;
+        font-size: 18px;
 
         &:invalid {
           outline: 3px solid red;

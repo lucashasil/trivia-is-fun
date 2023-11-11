@@ -288,13 +288,13 @@ class App extends React.Component<Props, State> {
             <select className="selectField" onChange={this.handleQuestionCategoryChange}>
               {
                 [
-                  <option defaultChecked>Any</option>
+                  <option className="selectOption" defaultChecked>Any</option>
                 ].concat(
                 this.humanCategoryNames().map((name) => <option value={name}>{name}</option>))
               }
             </select>
             </label>
-            <button type="submit" id="questions" onClick={() => this.handleStartClick()}>
+            <button type="submit" id="questions" onClick={() => this.handleStartClick()} disabled={!this.state.userSelection.numberOfQuestions}>
               Start
             </button>
           </div>
@@ -317,7 +317,7 @@ class App extends React.Component<Props, State> {
                 this.setState(cloneDeep(initialState)) // reset to initial state
               }
             >
-            Try Again?
+            Play Again?
             </button>
           ) : isError || currentQuestionIndex === null ? (
             <div>Something went wrong!</div>
