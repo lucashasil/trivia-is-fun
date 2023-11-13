@@ -3,6 +3,8 @@ import axios from "axios";
 
 import "./App.scss";
 
+import { Question, UserSelection } from "./types";
+
 import cloneDeep from "clone-deep";
 
 import { Vortex } from "react-loader-spinner";
@@ -24,21 +26,6 @@ interface State {
   isError: boolean;
   shuffledAnswers: string[];
   userSelection: UserSelection;
-}
-
-interface UserSelection {
-  numberOfQuestions: number;
-  questionDifficulty?: string;
-  questionCategory?: number;
-}
-
-interface Question {
-  category: string;
-  correct_answer: string;
-  difficulty: string;
-  incorrect_answers: string[];
-  question: string;
-  type: string;
 }
 
 enum Category {
@@ -368,7 +355,7 @@ class App extends React.Component<Props, State> {
               ariaLabel="vortex-loading"
               wrapperStyle={{}}
               wrapperClass="vortex-wrapper"
-              colors={["red", "green", "blue", "yellow", "orange", "purple"]}
+              colors={["grey", "grey", "grey", "grey", "grey", "grey"]}
             />
           ) : currentQuestionIndex === null ? (
             <button
