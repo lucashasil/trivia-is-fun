@@ -137,7 +137,6 @@ class App extends React.Component<Props, State> {
         shuffledAnswers: this.combineAnswers(questions[0]),
       });
     } catch (error) {
-      console.error("caught error", error);
       this.setState({
         isError: true,
       });
@@ -326,12 +325,12 @@ class App extends React.Component<Props, State> {
                 onChange={this.handleQuestionCategoryChange}
               >
                 {[
-                  <option className="selectOption" defaultChecked>
+                  <option key="any" value="any" className="selectOption" defaultChecked>
                     Any
                   </option>,
                 ].concat(
-                  this.humanCategoryNames().map((name) => (
-                    <option value={name}>{name}</option>
+                  this.humanCategoryNames().map((name, index) => (
+                    <option key={index} value={name}>{name}</option>
                   )),
                 )}
               </select>
