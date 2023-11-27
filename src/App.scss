@@ -1,83 +1,13 @@
 .App {
+  align-items: center;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  align-items: center;
 
-  > header > .header {
-    color: #fff;
-    font-size: 32px; /* Adjust the font size as needed */
-    font-family: "Lato", sans-serif;
-    margin-bottom: 14px;
-    user-select: none;
-    justify-content: center;
-  }
-
-  > .userSelection {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-
-    > button {
-      display: inline-block;
-      padding: 10px 20px;
-      font-size: 16px;
-      font-weight: bold;
-      text-align: center;
-      text-decoration: none;
-      cursor: pointer;
-      border: 2px solid #808080;
-      border-radius: 5px;
-      color: #ffffff;
-      background-color: #808080;
-      transition: background-color 0.3s ease;
-      width: 24%;
-      margin-bottom: 10px;
-
-      &:hover {
-        background-color: #666666;
-      }
-
-      &:active {
-        background-color: #4d4d4d;
-      }
-
-      &:disabled {
-        cursor: not-allowed;
-        opacity: 0.5;
-      }
-    }
-
-    > .inputLabel {
+  > .difficultyGroup {
+    > label {
       color: white;
-      font-size: 18px;
       font-family: "Lato", sans-serif;
-      margin-top: 10px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      margin-bottom: 14px;
-
-      > .inputField {
-        width: 50%;
-        padding: 10px;
-        margin: 5px 0;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-        font-size: 18px;
-
-        &:invalid {
-          outline: 3px solid red;
-        }
-      }
-    }
-
-    > .difficultyGroup {
-      > label {
-        color: white;
-        font-family: "Lato", sans-serif;
-      }
     }
   }
 
@@ -89,9 +19,88 @@
 
     > .questionCount {
       color: white;
-      font-size: 32px;
       font-family: "Lato", sans-serif;
+      font-size: 32px;
       margin: 0 auto;
+    }
+  }
+
+  > header > .header {
+    align-items: center;
+    color: #fff;
+    font-family: "Lato", sans-serif;
+    font-size: 32px;
+    justify-content: center;
+    margin-bottom: 14px;
+    text-align: center;
+    user-select: none;
+  }
+
+  > .userSelection {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+    > .difficultyGroup {
+      > label {
+        color: white;
+        font-family: "Lato", sans-serif;
+      }
+    }
+
+    > .inputLabel {
+      align-items: center;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      font-family: "Lato", sans-serif;
+      font-size: 18px;
+      margin-bottom: 14px;
+      margin-top: 10px;
+
+      > .inputField {
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 18px;
+        margin: 5px 0;
+        padding: 10px;
+        width: 50%;
+
+        &:invalid {
+          outline: 3px solid red;
+        }
+      }
+    }
+
+    > button {
+      background-color: #808080;
+      border: 2px solid #808080;
+      border-radius: 5px;
+      color: #ffffff;
+      cursor: pointer;
+      display: inline-block;
+      font-size: 16px;
+      font-weight: bold;
+      margin-bottom: 10px;
+      padding: 10px 20px;
+      text-align: center;
+      text-decoration: none;
+      transition: background-color 0.3s ease;
+      width: 24%;
+
+      &:active {
+        background-color: #4d4d4d;
+      }
+
+      &:disabled {
+        cursor: not-allowed;
+        opacity: 0.5;
+      }
+
+      &:hover {
+        background-color: #666666;
+      }
     }
   }
 }
