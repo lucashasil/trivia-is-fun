@@ -1,16 +1,10 @@
-import React from "react";
+import React, { ChangeEvent } from "react";
 import axios from "axios";
-
 import "./App.scss";
-
 import { Question, UserSelection } from "./types";
-
 import cloneDeep from "clone-deep";
-
 import { Vortex } from "react-loader-spinner";
-
 import AnswerBox from "./components/AnswerBox";
-
 import { shuffleArray } from "./utility/shuffleArray";
 
 interface Props {
@@ -62,7 +56,7 @@ enum Difficulty {
 }
 
 // store initial state for easy reset
-const initialState = {
+const initialState: State = {
   currentQuestionIndex: null,
   questions: [],
   hasStarted: false,
@@ -82,12 +76,9 @@ class App extends React.Component<Props, State> {
     super(props);
     this.state = cloneDeep(initialState); // deep clone the initial state to avoid mutating it
     this.handleStartClick = this.handleStartClick.bind(this);
-    this.handleNumberOfQuestionsChange =
-      this.handleNumberOfQuestionsChange.bind(this);
-    this.handleQuestionCategoryChange =
-      this.handleQuestionCategoryChange.bind(this);
-    this.handleQuestionDifficultyChange =
-      this.handleQuestionDifficultyChange.bind(this);
+    this.handleNumberOfQuestionsChange = this.handleNumberOfQuestionsChange.bind(this);
+    this.handleQuestionCategoryChange = this.handleQuestionCategoryChange.bind(this);
+    this.handleQuestionDifficultyChange = this.handleQuestionDifficultyChange.bind(this);
   }
 
   async fetchQuestions(
@@ -200,20 +191,15 @@ class App extends React.Component<Props, State> {
   handleStartClick() {
     const { userSelection } = this.state;
     if (userSelection) {
-      const { numberOfQuestions, questionDifficulty, questionCategory } =
-        userSelection;
+      const { numberOfQuestions, questionDifficulty, questionCategory } = userSelection;
       this.setState({
         hasStarted: true,
       });
-      this.fetchQuestions(
-        numberOfQuestions,
-        questionCategory,
-        questionDifficulty?.toLowerCase(),
-      );
+      this.fetchQuestions(numberOfQuestions, questionCategory, questionDifficulty?.toLowerCase());
     }
   }
 
-  handleNumberOfQuestionsChange(event: React.ChangeEvent<HTMLInputElement>) {
+  handleNumberOfQuestionsChange(event: ChangeEvent<HTMLInputElement>) {
     const { userSelection } = this.state;
     if (userSelection) {
       this.setState({
@@ -225,21 +211,19 @@ class App extends React.Component<Props, State> {
     }
   }
 
-  handleQuestionCategoryChange(event: React.ChangeEvent<HTMLSelectElement>) {
+  handleQuestionCategoryChange(event: ChangeEvent<HTMLSelectElement>) {
     const { userSelection } = this.state;
     if (userSelection) {
       this.setState({
         userSelection: {
           ...userSelection,
-          questionCategory:
-            Object.keys(Category).indexOf(
-              event.target.value.replace(/\s/g, ""),
-            ) - 15, // subtract 15 to set index correctly
+          questionCategory: Object.keys(Category).indexOf(event.target.value.replace(/\s/g, "")) - 15,
         },
       });
     }
   }
-  handleQuestionDifficultyChange(event: React.ChangeEvent<HTMLInputElement>) {
+
+  handleQuestionDifficultyChange(event: ChangeEvent<HTMLInputElement>) {
     const { userSelection } = this.state;
     if (userSelection) {
       this.setState({
@@ -251,100 +235,98 @@ class App extends React.Component<Props, State> {
     }
   }
 
-  render() {
-    const {
-      isLoading,
-      isError,
-      questions,
-      currentQuestionIndex,
-      hasStarted,
-      incorrectSelected,
-      shuffledAnswers,
-    } = this.state;
+  renderHeader() {
+    const { hasStarted, isLoading, currentQuestionIndex, questions } = this.state;
+
+    if (hasStarted && isLoading) {
+      return <div className="header">Loading...</div>;
+    } else if (hasStarted && currentQuestionIndex !== null) {
+      return <div className="header">{atob(questions[currentQuestionIndex].question)}</div>;
+    } else if (hasStarted && currentQuestionIndex === null && !isLoading) {
+      return <div className="header">Game Over!</div>;
+    } else {
+      return <div className="header">Trivia is Fun!</div>;
+    }
+  }
+
+  renderUserSelection() {
+    const { userSelection } = this.state;
+
     return (
-      <div className="App">
-        <header>
-          {hasStarted && isLoading ? (
-            <div className="header">Loading...</div>
-          ) : hasStarted && currentQuestionIndex !== null ? (
-            <div className="header">
-              {atob(this.state.questions[currentQuestionIndex].question)}
-            </div>
-          ) : hasStarted && currentQuestionIndex === null && !isLoading ? (
-            <div className="header">Game Over!</div>
-          ) : (
-            <div className="header">Trivia is Fun!</div>
-          )}
-        </header>
-        {!hasStarted && (
-          <div className="userSelection">
-            <label className="inputLabel">
-              How many questions would you like? (Please enter a number between
-              1 and 50)
-              <br />
-              <input
-                className="inputField"
-                min="1"
-                max="50"
-                type="number"
-                onChange={this.handleNumberOfQuestionsChange}
-              />
-              <br />
-              (If your desired number of questions cannot be found, all
-              available questions will be returned)
-            </label>
-            <label className="inputLabel">
-              What should the difficulty of the questions be?
-              <div className="difficultyGroup">
-                {["Easy", "Medium", "Hard"].map((difficulty) => (
-                  <label key={difficulty}>
-                    <input
-                      type="radio"
-                      value={difficulty === "Any" ? undefined : difficulty}
-                      name="difficulty"
-                      onChange={this.handleQuestionDifficultyChange}
-                    />
-                    {difficulty}
-                  </label>
-                ))}
+      <div className="userSelection">
+        <label className="inputLabel">
+          How many questions would you like? (Please enter a number between 1 and 50)
+          <br />
+          <input
+            className="inputField"
+            min="1"
+            max="50"
+            type="number"
+            onChange={this.handleNumberOfQuestionsChange}
+          />
+          <br />
+          (If your desired number of questions cannot be found, all available questions will be returned)
+        </label>
+        <label className="inputLabel">
+          What should the difficulty of the questions be?
+          <div className="difficultyGroup">
+            {["Easy", "Medium", "Hard"].map((difficulty) => (
+              <label key={difficulty}>
                 <input
-                  defaultChecked
                   type="radio"
-                  value={undefined}
+                  value={difficulty === "Any" ? undefined : difficulty}
                   name="difficulty"
                   onChange={this.handleQuestionDifficultyChange}
                 />
-                Any
-              </div>
-            </label>
-            <label className="inputLabel">
-              Please select a question category
-              <br />
-              <select
-                className="selectField"
-                onChange={this.handleQuestionCategoryChange}
-              >
-                {[
-                  <option key="any" value="any" className="selectOption" defaultChecked>
-                    Any
-                  </option>,
-                ].concat(
-                  this.humanCategoryNames().map((name, index) => (
-                    <option key={index} value={name}>{name}</option>
-                  )),
-                )}
-              </select>
-            </label>
-            <button
-              type="submit"
-              id="questions"
-              onClick={() => this.handleStartClick()}
-              disabled={!this.state.userSelection.numberOfQuestions}
-            >
-              Start
-            </button>
+                {difficulty}
+              </label>
+            ))}
+            <input
+              defaultChecked
+              type="radio"
+              value={undefined}
+              name="difficulty"
+              onChange={this.handleQuestionDifficultyChange}
+            />
+            Any
           </div>
-        )}
+        </label>
+        <label className="inputLabel">
+          Please select a question category
+          <br />
+          <select
+            className="selectField"
+            onChange={this.handleQuestionCategoryChange}
+          >
+            {[
+              <option key="any" value="any" className="selectOption" defaultChecked>
+                Any
+              </option>,
+            ].concat(
+              this.humanCategoryNames().map((name, index) => (
+                <option key={index} value={name}>{name}</option>
+              )),
+            )}
+          </select>
+        </label>
+        <button
+          type="submit"
+          id="questions"
+          onClick={() => this.handleStartClick()}
+          disabled={!userSelection.numberOfQuestions}
+        >
+          Start
+        </button>
+      </div>
+    );
+  }
+
+  render() {
+    const { isLoading, isError, currentQuestionIndex, hasStarted, incorrectSelected, questions, shuffledAnswers } = this.state;
+    return (
+      <div className="App">
+        {this.renderHeader()}
+        {!hasStarted && this.renderUserSelection()}
         {hasStarted &&
           (isLoading ? (
             <Vortex
