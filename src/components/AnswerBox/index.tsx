@@ -5,7 +5,7 @@ import React from "react";
 type Props = {
   options: string[];
   selected: (answer: string) => void;
-  correctAnswer: string;
+  correct_answer: string;
   incorrectSelected: string[];
 };
 
