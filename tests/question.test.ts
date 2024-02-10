@@ -2,18 +2,18 @@ import { getAllAnswers } from "./question";
 
 const question = {
   category: "History",
-  correctAnswer: "1914",
+  correct_answer: "1914",
   difficulty: "Easy",
-  incorrectAnswers: ["1913", "1915", "1916"],
+  incorrect_answers: ["1913", "1915", "1916"],
   question: "What year did World War I begin?",
   type: "Multiple Choice"
 }
 
 const questionTf = {
   category: "Geography",
-  correctAnswer: "True",
+  correct_answer: "True",
   difficulty: "Easy",
-  incorrectAnswers: ["False"],
+  incorrect_answers: ["False"],
   question: "Russia is a part of Asia?",
   type: "True / False"
 }

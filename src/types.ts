@@ -6,9 +6,9 @@ interface UserSelection {
 
 interface Question {
   category: string;
-  correctAnswer: string;
+  correct_answer: string; // per the API
   difficulty: string;
-  incorrectAnswers: string[];
+  incorrect_answers: string[]; // per the API
   question: string;
   type: string;
 }

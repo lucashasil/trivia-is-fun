@@ -106,11 +106,11 @@ class App extends React.Component<Props, State> {
   // Combine the correct and incorrect answers for a question into an array and then
   // shuffle them randomly
   combineAnswers(question: Question) {
-    const correctAnswer = atob(question.correctAnswer);
-    const incorrectAnswers = question.incorrectAnswers.map((answer) =>
+    const correct_answer = atob(question.correct_answer);
+    const incorrect_answers = question.incorrect_answers.map((answer) =>
       atob(answer),
     );
-    return shuffleArray(incorrectAnswers.concat(correctAnswer)); // randomly sort answers using a Durstenfeld Shuffle
+    return shuffleArray(incorrect_answers.concat(correct_answer)); // randomly sort answers using a Durstenfeld Shuffle
   }
 
   // Convert the OpenTDB category enum values to human readable names
@@ -182,6 +182,7 @@ class App extends React.Component<Props, State> {
         shuffledAnswers: this.combineAnswers(questions[0]),
       });
     } catch (error) {
+      console.error(error)
       this.setState({
         isError: true,
       });
@@ -197,7 +198,7 @@ class App extends React.Component<Props, State> {
     // If the selected answer is correct, try and move to the next question
     if (
       currentQuestionIndex !== null &&
-      answer === atob(questions[currentQuestionIndex].correctAnswer)
+      answer === atob(questions[currentQuestionIndex].correct_answer)
     ) {
       // If we are on the last question, set the current question index to null
       if (currentQuestionIndex === questions.length - 1) {
@@ -373,8 +374,8 @@ class App extends React.Component<Props, State> {
           (isLoading ? (
             <Vortex
               visible={true}
-              height="80"
-              width="80"
+              height="120"
+              width="120"
               ariaLabel="vortex-loading"
               wrapperStyle={{}}
               wrapperClass="vortex-wrapper"
@@ -399,7 +400,7 @@ class App extends React.Component<Props, State> {
                   selected={(answer: string) =>
                     this.handleAnswerSelection(answer)
                   }
-                  correctAnswer={atob(questions[0].correctAnswer)}
+                  correct_answer={atob(questions[0].correct_answer)}
                   incorrectSelected={incorrectSelected}
                 />
               </div>
