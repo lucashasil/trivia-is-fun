@@ -1,27 +1,17 @@
-import React, { ChangeEvent } from "react";
-import axios from "axios";
 import "./App.scss";
+
 import { Question, UserSelection } from "./types";
-import cloneDeep from "clone-deep";
-import { Vortex } from "react-loader-spinner";
+import React, { ChangeEvent } from "react";
+
 import AnswerBox from "./components/AnswerBox";
+import { Vortex } from "react-loader-spinner";
+import axios from "axios";
+import cloneDeep from "clone-deep";
+
 import { shuffleArray } from "./utility/shuffleArray";
 
-interface Props {
-  difficulty?: "string";
-}
-
-interface State {
-  currentQuestionIndex: number | null;
-  questions: Question[];
-  hasStarted: boolean;
-  incorrectSelected: string[];
-  isLoading: boolean;
-  isError: boolean;
-  shuffledAnswers: string[];
-  userSelection: UserSelection;
-}
-
+// Define an enum for OpenTDB question categories, these values
+// were pulled directly from their API and may be subject to change
 enum Category {
   General = 9,
   Books = 10,
@@ -55,7 +45,23 @@ enum Difficulty {
   Hard = "hard",
 }
 
-// store initial state for easy reset
+interface Props {
+  difficulty?: string;
+}
+
+interface State {
+  currentQuestionIndex: number | null;
+  questions: Question[];
+  hasStarted: boolean;
+  incorrectSelected: string[];
+  isLoading: boolean;
+  isError: boolean;
+  shuffledAnswers: string[];
+  userSelection: UserSelection;
+}
+
+// Store the initial component state so that we can easily
+// reset back to this when we need. Be sure to avoid mutation
 const initialState: State = {
   currentQuestionIndex: null,
   questions: [],
@@ -81,100 +87,9 @@ class App extends React.Component<Props, State> {
     this.handleQuestionDifficultyChange = this.handleQuestionDifficultyChange.bind(this);
   }
 
-  async fetchQuestions(
-    amount: number,
-    category: Category | undefined,
-    difficulty: string | undefined,
-  ) {
-    const countUrl = `https://opentdb.com/api_count.php?${
-      category ? `category=${category}` : ""
-    }`;
-    const res = await axios.get(countUrl);
+  // Helper functions
 
-    // handle the case where the maximum number of available questions is less than
-    // the user's desired number of questions
-    let numQuestions;
-    if (category) {
-      if (difficulty) {
-        numQuestions =
-          res.data.category_question_count[
-            `total_${difficulty}_question_count`
-          ];
-      } else {
-        numQuestions = res.data.category_question_count[`total_question_count`];
-      }
-    }
-    // fetch the maximum number of questions available for the selected category and difficulty
-    if (numQuestions < amount) {
-      amount = numQuestions;
-    }
-
-    const baseUrl = `https://opentdb.com/api.php?amount=${amount}${
-      category ? `&category=${category}` : ""
-    }${difficulty ? `&difficulty=${difficulty}` : ""}&encode=base64`;
-    try {
-      const resFinal = await axios.get(baseUrl);
-      const questions: Question[] = resFinal.data.results;
-      if (questions.length === 0) {
-        this.setState({
-          isError: true,
-        });
-        return;
-      }
-      this.setState({
-        currentQuestionIndex: 0,
-        questions: questions,
-        isLoading: false,
-        shuffledAnswers: this.combineAnswers(questions[0]),
-      });
-    } catch (error) {
-      this.setState({
-        isError: true,
-      });
-    }
-  }
-
-  combineAnswers(question: Question) {
-    const correctAnswer = atob(question.correct_answer);
-    const incorrectAnswers = question.incorrect_answers.map((answer) =>
-      atob(answer),
-    );
-    return shuffleArray(incorrectAnswers.concat(correctAnswer)); // randomly sort answers using a Durstenfeld Shuffle
-  }
-
-  humanCategoryNames() {
-    const categoryNames = Object.keys(Category).filter((key) =>
-      isNaN(Number(key)),
-    );
-    return categoryNames.map((name) => name.replace(/([A-Z])/g, " $1").trim());
-  }
-
-  handleAnswerSelection(answer: string) {
-    const { currentQuestionIndex, incorrectSelected, questions } = this.state;
-    if (
-      currentQuestionIndex !== null &&
-      answer === atob(questions[currentQuestionIndex].correct_answer)
-    ) {
-      if (currentQuestionIndex === questions.length - 1) {
-        // last question
-        this.setState({
-          currentQuestionIndex: null,
-        });
-      } else {
-        this.setState({
-          currentQuestionIndex: currentQuestionIndex + 1,
-          shuffledAnswers: this.combineAnswers(
-            questions[currentQuestionIndex + 1],
-          ),
-        });
-      }
-    } else {
-      this.setState({
-        incorrectSelected: incorrectSelected.concat(answer),
-      });
-    }
-  }
-
+  // Convert a question difficult string to an enum value
   convertQuestionDifficulty(difficulty: string) {
     switch (difficulty) {
       case "Easy":
@@ -188,17 +103,126 @@ class App extends React.Component<Props, State> {
     }
   }
 
-  handleStartClick() {
-    const { userSelection } = this.state;
-    if (userSelection) {
-      const { numberOfQuestions, questionDifficulty, questionCategory } = userSelection;
+  // Combine the correct and incorrect answers for a question into an array and then
+  // shuffle them randomly
+  combineAnswers(question: Question) {
+    const correctAnswer = atob(question.correctAnswer);
+    const incorrectAnswers = question.incorrectAnswers.map((answer) =>
+      atob(answer),
+    );
+    return shuffleArray(incorrectAnswers.concat(correctAnswer)); // randomly sort answers using a Durstenfeld Shuffle
+  }
+
+  // Convert the OpenTDB category enum values to human readable names
+  humanCategoryNames() {
+    const categoryNames = Object.keys(Category).filter((key) =>
+      isNaN(Number(key)),
+    );
+    return categoryNames.map((name) => name.replace(/([A-Z])/g, " $1").trim());
+  }
+
+  // Fetch questions from the OpenTDB API asynchronously
+  async fetchQuestions(
+    amount: number,
+    category: Category | undefined,
+    difficulty: string | undefined,
+  ) {
+    // Firstly, fetch the maximum number of available questions for a given
+    // category using the API's count endpoint. This will be used to determine if we
+    // have enough questions available for the user's selected category
+    const countUrl = `https://opentdb.com/api_count.php?${
+      category ? `category=${category}` : ""
+    }`;
+
+    const res = await axios.get(countUrl);
+
+    let numQuestions;
+
+    // Make sure to extract the correct number of questions for a given category AND difficulty
+    if (category) {
+      if (difficulty) {
+        numQuestions =
+          res.data.category_question_count[
+            `total_${difficulty}_question_count`
+          ];
+      } else {
+        numQuestions = res.data.category_question_count["total_question_count"];
+      }
+    }
+
+    // The if the number of questions available is less than what is desired, we will
+    // simply fetch all that we can
+    if (numQuestions < amount) {
+      amount = numQuestions;
+    }
+
+    // Construct the base API URL with the user's selected options and
+    // the available questions
+    const baseUrl = `https://opentdb.com/api.php?amount=${amount}${
+      category ? `&category=${category}` : ""
+    }${difficulty ? `&difficulty=${difficulty}` : ""}&encode=base64`;
+
+    try {
+      const resFinal = await axios.get(baseUrl);
+      const questions: Question[] = resFinal.data.results;
+
+      // If no questions are returned, set an error state as something has gone wrong
+      if (questions.length === 0) {
+        this.setState({
+          isError: true,
+        });
+        return;
+      }
+
+      // Otherwise update our questions state and shuffle the answers for the first question
       this.setState({
-        hasStarted: true,
+        currentQuestionIndex: 0,
+        questions: questions,
+        isLoading: false,
+        shuffledAnswers: this.combineAnswers(questions[0]),
       });
-      this.fetchQuestions(numberOfQuestions, questionCategory, questionDifficulty?.toLowerCase());
+    } catch (error) {
+      this.setState({
+        isError: true,
+      });
     }
   }
 
+  // Event handlers
+
+  // For a given selected answer, determine if it is correct or incorrect
+  handleAnswerSelection(answer: string) {
+    const { currentQuestionIndex, incorrectSelected, questions } = this.state;
+
+    // If the selected answer is correct, try and move to the next question
+    if (
+      currentQuestionIndex !== null &&
+      answer === atob(questions[currentQuestionIndex].correctAnswer)
+    ) {
+      // If we are on the last question, set the current question index to null
+      if (currentQuestionIndex === questions.length - 1) {
+        this.setState({
+          currentQuestionIndex: null,
+        });
+        // Otherwise, move to the next question and shuffle the answers
+      } else {
+        this.setState({
+          currentQuestionIndex: currentQuestionIndex + 1,
+          shuffledAnswers: this.combineAnswers(
+            questions[currentQuestionIndex + 1],
+          ),
+        });
+      }
+      // If the selected answer is incorrect, add it to the incorrectSelected array
+      // to keep track of an incorrect answer
+    } else {
+      this.setState({
+        incorrectSelected: incorrectSelected.concat(answer),
+      });
+    }
+  }
+
+  // Update state for a user's desired number of questions
   handleNumberOfQuestionsChange(event: ChangeEvent<HTMLInputElement>) {
     const { userSelection } = this.state;
     if (userSelection) {
@@ -211,6 +235,7 @@ class App extends React.Component<Props, State> {
     }
   }
 
+  // Update state for a user's desired question category
   handleQuestionCategoryChange(event: ChangeEvent<HTMLSelectElement>) {
     const { userSelection } = this.state;
     if (userSelection) {
@@ -223,6 +248,7 @@ class App extends React.Component<Props, State> {
     }
   }
 
+  // Update state for a user's desired question difficulty
   handleQuestionDifficultyChange(event: ChangeEvent<HTMLInputElement>) {
     const { userSelection } = this.state;
     if (userSelection) {
@@ -235,6 +261,21 @@ class App extends React.Component<Props, State> {
     }
   }
 
+  // When the start button is clicked, parse userSelection state and feed
+  // this to the fetch function
+  handleStartClick() {
+    const { userSelection } = this.state;
+    if (userSelection) {
+      const { numberOfQuestions, questionDifficulty, questionCategory } = userSelection;
+      this.setState({
+        hasStarted: true,
+      });
+      this.fetchQuestions(numberOfQuestions, questionCategory, questionDifficulty?.toLowerCase());
+    }
+  }
+
+  // Render the correct page header based on the current application state
+  // e.g. loading, question text, game over, title
   renderHeader() {
     const { hasStarted, isLoading, currentQuestionIndex, questions } = this.state;
 
@@ -323,6 +364,7 @@ class App extends React.Component<Props, State> {
 
   render() {
     const { isLoading, isError, currentQuestionIndex, hasStarted, incorrectSelected, questions, shuffledAnswers } = this.state;
+
     return (
       <div className="App">
         {this.renderHeader()}
@@ -342,7 +384,7 @@ class App extends React.Component<Props, State> {
             <button
               className="restartButton"
               onClick={
-                () => this.setState(cloneDeep(initialState)) // reset to initial state
+                () => this.setState(cloneDeep(initialState)) // reset to initial state on restart
               }
             >
               Play Again?
@@ -357,7 +399,7 @@ class App extends React.Component<Props, State> {
                   selected={(answer: string) =>
                     this.handleAnswerSelection(answer)
                   }
-                  correctAnswer={atob(questions[0].correct_answer)}
+                  correctAnswer={atob(questions[0].correctAnswer)}
                   incorrectSelected={incorrectSelected}
                 />
               </div>

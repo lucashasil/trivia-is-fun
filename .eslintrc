@@ -6,5 +6,10 @@
     "eslint:recommended",
     "plugin:@typescript-eslint/eslint-recommended",
     "plugin:@typescript-eslint/recommended"
-  ]
+  ],
+  "rules": {
+      "camelcase": 2,
+      "sort-imports": 2,
+      "quotes": ["error", "double"]
+  }
 }
