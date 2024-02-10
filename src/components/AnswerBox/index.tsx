@@ -1,5 +1,6 @@
-import React from "react";
 import "./style.scss";
+
+import React from "react";
 
 type Props = {
   options: string[];
@@ -8,10 +9,13 @@ type Props = {
   incorrectSelected: string[];
 };
 
+// This component is responsible for rendering the answer options for the user to select
 class AnswerBox extends React.Component<Props> {
   render() {
     const { options, incorrectSelected, selected } = this.props;
-    console.log("incorrectselected = ", incorrectSelected);
+
+    // This will render the answer options for the user to select, make
+    // sure that we highlight answers that were selected incorrectly
     return (
       <div className="AnswerBox">
         {options.map((option, index) => (
