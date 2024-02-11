@@ -16,5 +16,6 @@
     "noEmit": true,
     "jsx": "react-jsx"
   },
-  "include": ["src"]
+  "include": ["src", "tests/setupTests.ts"],
+  "types": ["node", "jest", "@testing-library/jest-dom"],
 }

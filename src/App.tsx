@@ -164,10 +164,10 @@ class App extends React.Component<Props, State> {
 
     try {
       const resFinal = await axios.get(baseUrl);
-      const questions: Question[] = resFinal.data.results;
+      const questions: Question[] = resFinal?.data?.results;
 
       // If no questions are returned, set an error state as something has gone wrong
-      if (questions.length === 0) {
+      if (!questions || questions.length === 0) {
         this.setState({
           isError: true,
         });
