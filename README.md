@@ -58,9 +58,8 @@ Getting the project running locally is very simple and can be accomplished by fo
 
 ### Prerequisites
 
-This is an example of how to list things you need to use the software and how to install them.
 * Node.js `>= 18.x`
-  * This project requires a minimum Node version of 18
+  * This project requires a minimum Node.js version of `18`
 * npm
   ```sh
   npm install -g npm@latest
