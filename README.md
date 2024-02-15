@@ -1,6 +1,5 @@
 <a name="readme-top"></a>
 
-<br />
 <h3 align="center">trivia-is-fun</h3>
   <p align="center">
     A React based Trivia game that utilizes the Open Trivia DB API
@@ -96,7 +95,7 @@ npx eslint .
 
 Alternatively, any issues can attempt to be autofixed by running:
 ```sh
-npx eslint. --fix
+npx eslint . --fix
 ```
 
 ### Tests
@@ -110,7 +109,7 @@ npm run test
 
 ## License
 
-Distributed under the MIT License. See See [LICENSE](https://github.com/lucashasil/trivia-is-fun/blob/main/LICENSE) for more information.
+Distributed under the MIT License. See [LICENSE](https://github.com/lucashasil/trivia-is-fun/blob/main/LICENSE) for more information.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
